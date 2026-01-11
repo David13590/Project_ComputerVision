@@ -9,21 +9,25 @@ img_original = cv2.imread("images/hylstre_maatte.jpg")
 img_grayscale = cv2.imread("images/hylstre_maatte.jpg", 0) #Convert to grayscale
 
 def img_plot():
+    plot.figure(1) # Create and activete figure 1
+
     plot.subplot(121)
-    cv2.namedWindow("Grayscale", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Grayscale", imgResizeX, imgResizeY)
-    cv2.imshow("Grayscale", img_grayscale)
+    plot.imshow(img_original)
+    plot.title('Original Image')
+    plot.axis('off')
+    #cv2.namedWindow("Grayscale", cv2.WINDOW_NORMAL)
+    #cv2.resizeWindow("Grayscale", imgResizeX, imgResizeY)
+    #cv2.imshow("Grayscale", img_grayscale)
 
     plot.subplot(122)
-    cv2.namedWindow("Original", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Original", imgResizeX, imgResizeY)
-    cv2.imshow("Original", img_original)
+    plot.imshow(img_grayscale, cmap='gray')
+    plot.title('Grayscale Image')
+    plot.axis('off')
+    #cv2.namedWindow("Original", cv2.WINDOW_NORMAL)
+    #cv2.resizeWindow("Original", imgResizeX, imgResizeY)
+    #cv2.imshow("Original", img_original)
 
     plot.tight_layout()
-    plot.show()
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
 def compare_histograms():
     grayscale_histogram = cv2.calcHist([img_grayscale], [0], None, [256], [0,256]) # Create histogram of grayscale img
@@ -34,6 +38,8 @@ def compare_histograms():
     equalized_histogram = cv2.calcHist([equalized_img], [0], None, [256], [0,256])
 
     # Plot images and histograms
+    plot.figure(2) # Create and activate figure 2
+
     plot.subplot(221)
     plot.imshow(img_grayscale, cmap='gray')
     plot.title('Original Grayscale')
@@ -55,7 +61,11 @@ def compare_histograms():
     plot.xlim([0,256])
 
     plot.tight_layout()
-    plot.show()
-
-img_plot()
+    
+# Call plot functions
+img_plot() 
 compare_histograms()
+
+plot.show() # Show all plots
+cv2.waitKey(0)
+cv2.destroyAllWindows()
