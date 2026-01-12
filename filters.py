@@ -15,17 +15,11 @@ def img_plot():
     plot.imshow(img_original)
     plot.title('Original Image')
     plot.axis('off')
-    #cv2.namedWindow("Grayscale", cv2.WINDOW_NORMAL)
-    #cv2.resizeWindow("Grayscale", imgResizeX, imgResizeY)
-    #cv2.imshow("Grayscale", img_grayscale)
 
     plot.subplot(122)
     plot.imshow(img_grayscale, cmap='gray')
     plot.title('Grayscale Image')
     plot.axis('off')
-    #cv2.namedWindow("Original", cv2.WINDOW_NORMAL)
-    #cv2.resizeWindow("Original", imgResizeX, imgResizeY)
-    #cv2.imshow("Original", img_original)
 
     plot.tight_layout()
 
@@ -108,8 +102,6 @@ def contour_detect(img, img2):
     plot.axis('off')
     
     return contours, img_contours, contours2, img2_contours
-
-
 
 # Call plot functions
 img_plot() 
