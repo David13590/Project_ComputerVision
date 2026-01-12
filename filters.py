@@ -2,32 +2,32 @@ import cv2
 import numpy as np 
 from matplotlib import pyplot as plot 
 
-imgResizeX = 500
-imgResizeY = 400
+img_original_casings_black = cv2.imread("images/hylstre_maatte.jpg")
+img_grayscale_casings_black = cv2.imread("images/hylstre_maatte.jpg", 0) #Convert to grayscale
 
-img_original = cv2.imread("images/hylstre_maatte.jpg")
-img_grayscale = cv2.imread("images/hylstre_maatte.jpg", 0) #Convert to grayscale
+img_original_casings_noise = cv2.imread("images/hylstre_stoej.jpg")
+img_grayscale_casings_noise = cv2.imread("images/hylstre_stoej.jpg", 0) #Convert to grayscale
 
 def img_plot():
     plot.figure(1) # Create and activete figure 1
 
     plot.subplot(121)
-    plot.imshow(img_original)
+    plot.imshow(img_original_casings_black)
     plot.title('Original Image')
     plot.axis('off')
 
     plot.subplot(122)
-    plot.imshow(img_grayscale, cmap='gray')
+    plot.imshow(img_grayscale_casings_black, cmap='gray')
     plot.title('Grayscale Image')
     plot.axis('off')
 
     plot.tight_layout()
 
 def compare_histograms():
-    grayscale_histogram = cv2.calcHist([img_grayscale], [0], None, [256], [0,256]) # Create histogram of grayscale img
+    grayscale_histogram = cv2.calcHist([img_grayscale_casings_black], [0], None, [256], [0,256]) # Create histogram of grayscale img
 
     # Create equalized grayscale image and histogram
-    grayscale_BGR2GRAY = cv2.cvtColor(img_original, cv2.COLOR_BGR2GRAY)
+    grayscale_BGR2GRAY = cv2.cvtColor(img_original_casings_black, cv2.COLOR_BGR2GRAY)
     img_equalized = cv2.equalizeHist(grayscale_BGR2GRAY)
     equalized_histogram = cv2.calcHist([img_equalized], [0], None, [256], [0,256])
 
@@ -35,7 +35,7 @@ def compare_histograms():
     plot.figure(2) # Create and activate figure 2
 
     plot.subplot(221)
-    plot.imshow(img_grayscale, cmap='gray')
+    plot.imshow(img_grayscale_casings_black, cmap='gray')
     plot.title('Original Grayscale')
     plot.axis('off')
 
@@ -56,7 +56,7 @@ def compare_histograms():
 
     plot.tight_layout()
 
-    return img_grayscale, img_equalized
+    return img_grayscale_casings_black, img_equalized
 
 # Contour detect 
 def contour_detect(img, img2):
