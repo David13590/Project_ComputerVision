@@ -9,7 +9,7 @@ img_original_casings_noise = cv2.imread("images/hylstre_stoej.jpg")
 img_grayscale_casings_noise = cv2.imread("images/hylstre_stoej.jpg", 0) #Convert to grayscale
 
 def img_plot(input_img_original, input_img_grayscale):
-    plot.figure(1) # Create and activete figure 1
+    plot.figure(1) # Create and activate figure 1
 
     plot.subplot(121)
     plot.imshow(input_img_original)
@@ -67,7 +67,12 @@ def contour_detect(img, img2):
     contour_line_thickness = 2
     contour_parrent_idx = -1 # -1 to draw all contours
     contour_line_color = (0, 255, 0) # BGR
-    contour_min_area = 200  # Minimum area to consider a contour
+    contour_min_area = 200  # Minimum area in pixels to consider as contour
+    
+    plot_font_size = 9
+    plot_text_color = 'red'
+    plot_text_position_x = 0.00 
+    plot_text_position_y = 0.95
 
     # First img
     ret, thresh = cv2.threshold(img, thresh_lower_bound, thresh_upper_bound, thresh_type[0]) # Apply threshold for better accuracy
@@ -91,17 +96,30 @@ def contour_detect(img, img2):
 
     plot.subplot(211)
     plot.imshow(img_contours, cmap='gray')
-    plot.text(0.00, 0.95, f"count: {len(contour_filtered)}", transform=plot.gca().transAxes, fontsize=9, color='red') # Add contour count text
+    plot.text(plot_text_position_x, plot_text_position_y, f"count: {len(contour_filtered)}", transform=plot.gca().transAxes, fontsize=plot_font_size, color=plot_text_color) # Add contour count text
     plot.title('Contours')
     plot.axis('off')
 
     plot.subplot(212)
     plot.imshow(img2_contours, cmap='gray')
-    plot.text(0.00, 0.95, f"count: {len(contour2_filtered)}", transform=plot.gca().transAxes, fontsize=9, color='red') # Add contour count text
+    plot.text(plot_text_position_x, plot_text_position_y, f"count: {len(contour2_filtered)}", transform=plot.gca().transAxes, fontsize=plot_font_size, color=plot_text_color) # Add contour count text
     plot.title('Contours Equalized')
     plot.axis('off')
     
     return contours, img_contours, contours2, img2_contours
+
+def otsu_binarization(input_img):
+    otsu_thresh_lower_bound = 0
+    otsu_thresh_upper_bound = 255
+    gaussian_kernel_size = (5,5)
+
+    blur = cv2.GaussianBlur(input_img, gaussian_kernel_size, 0) # Gaussian blur to reduce noise
+    ret1, otsu_thresh = cv2.threshold(blur, otsu_thresh_lower_bound, otsu_thresh_upper_bound, cv2.THRESH_BINARY + cv2.THRESH_OTSU) # Otsu binarization
+    
+    
+    
+    return otsu_thresh
+
 
 # Call plot functions
 # First set of images
@@ -116,6 +134,7 @@ cv2.destroyAllWindows()
 # Second set of images
 img_plot(img_original_casings_noise, img_grayscale_casings_noise)
 img2_grayscale_hist, img2_equalized_hist = compare_histograms(img_grayscale_casings_noise, img_original_casings_noise) # Save returned values
+  # Do otsu binerization contour detection
 contours2_grayscale = contour_detect(img2_grayscale_hist, img2_equalized_hist)
 
 plot.show() # Show all plots
