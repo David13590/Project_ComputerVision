@@ -8,26 +8,26 @@ img_grayscale_casings_black = cv2.imread("images/hylstre_maatte.jpg", 0) #Conver
 img_original_casings_noise = cv2.imread("images/hylstre_stoej.jpg")
 img_grayscale_casings_noise = cv2.imread("images/hylstre_stoej.jpg", 0) #Convert to grayscale
 
-def img_plot():
+def img_plot(input_img_original, input_img_grayscale):
     plot.figure(1) # Create and activete figure 1
 
     plot.subplot(121)
-    plot.imshow(img_original_casings_black)
+    plot.imshow(input_img_original)
     plot.title('Original Image')
     plot.axis('off')
 
     plot.subplot(122)
-    plot.imshow(img_grayscale_casings_black, cmap='gray')
+    plot.imshow(input_img_grayscale, cmap='gray')
     plot.title('Grayscale Image')
     plot.axis('off')
 
     plot.tight_layout()
 
-def compare_histograms():
-    grayscale_histogram = cv2.calcHist([img_grayscale_casings_black], [0], None, [256], [0,256]) # Create histogram of grayscale img
+def compare_histograms(input_img_grayscale, input_img_original):
+    grayscale_histogram = cv2.calcHist([input_img_grayscale], [0], None, [256], [0,256]) # Create histogram of grayscale img
 
     # Create equalized grayscale image and histogram
-    grayscale_BGR2GRAY = cv2.cvtColor(img_original_casings_black, cv2.COLOR_BGR2GRAY)
+    grayscale_BGR2GRAY = cv2.cvtColor(input_img_original, cv2.COLOR_BGR2GRAY)
     img_equalized = cv2.equalizeHist(grayscale_BGR2GRAY)
     equalized_histogram = cv2.calcHist([img_equalized], [0], None, [256], [0,256])
 
@@ -35,7 +35,7 @@ def compare_histograms():
     plot.figure(2) # Create and activate figure 2
 
     plot.subplot(221)
-    plot.imshow(img_grayscale_casings_black, cmap='gray')
+    plot.imshow(input_img_grayscale, cmap='gray')
     plot.title('Original Grayscale')
     plot.axis('off')
 
@@ -56,7 +56,7 @@ def compare_histograms():
 
     plot.tight_layout()
 
-    return img_grayscale_casings_black, img_equalized
+    return input_img_grayscale, img_equalized
 
 # Contour detect 
 def contour_detect(img, img2):
@@ -91,22 +91,32 @@ def contour_detect(img, img2):
 
     plot.subplot(211)
     plot.imshow(img_contours, cmap='gray')
-    plot.text(0.00, 0.95, f"count: {len(contour_filtered)}", transform=plot.gca().transAxes, fontsize=9, color='green') # Add contour count text
+    plot.text(0.00, 0.95, f"count: {len(contour_filtered)}", transform=plot.gca().transAxes, fontsize=9, color='red') # Add contour count text
     plot.title('Contours')
     plot.axis('off')
 
     plot.subplot(212)
     plot.imshow(img2_contours, cmap='gray')
-    plot.text(0.00, 0.95, f"count: {len(contour2_filtered)}", transform=plot.gca().transAxes, fontsize=9, color='green') # Add contour count text
+    plot.text(0.00, 0.95, f"count: {len(contour2_filtered)}", transform=plot.gca().transAxes, fontsize=9, color='red') # Add contour count text
     plot.title('Contours Equalized')
     plot.axis('off')
     
     return contours, img_contours, contours2, img2_contours
 
 # Call plot functions
-img_plot() 
-img_grayscale_hist, img_equalized_hist = compare_histograms() # Save returned values
+# First set of images
+img_plot(img_original_casings_black, img_grayscale_casings_black) 
+img_grayscale_hist, img_equalized_hist = compare_histograms(img_grayscale_casings_black, img_original_casings_black) # Save returned values
 contours_grayscale = contour_detect(img_grayscale_hist, img_equalized_hist)
+
+plot.show() # Show all plots
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Second set of images
+img_plot(img_original_casings_noise, img_grayscale_casings_noise)
+img2_grayscale_hist, img2_equalized_hist = compare_histograms(img_grayscale_casings_noise, img_original_casings_noise) # Save returned values
+contours2_grayscale = contour_detect(img2_grayscale_hist, img2_equalized_hist)
 
 plot.show() # Show all plots
 cv2.waitKey(0)
