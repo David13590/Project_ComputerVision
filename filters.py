@@ -108,17 +108,60 @@ def contour_detect(img, img2):
     
     return contours, img_contours, contours2, img2_contours
 
-def otsu_binarization(input_img):
+def otsu_binarization(input_img_equalized_grayscale, input_img2_original_grayscale):
     otsu_thresh_lower_bound = 0
     otsu_thresh_upper_bound = 255
-    gaussian_kernel_size = (5,5)
+    gaussian_kernel_size = (25,25)
 
-    blur = cv2.GaussianBlur(input_img, gaussian_kernel_size, 0) # Gaussian blur to reduce noise
-    ret1, otsu_thresh = cv2.threshold(blur, otsu_thresh_lower_bound, otsu_thresh_upper_bound, cv2.THRESH_BINARY + cv2.THRESH_OTSU) # Otsu binarization
+    # Original image
+    # Set 1
+    histogram_original = cv2.calcHist([input_img2_original_grayscale], [0], None, [256], [0,256])
+    ret1, otsu_thresh_original = cv2.threshold(input_img2_original_grayscale, otsu_thresh_lower_bound, otsu_thresh_upper_bound, cv2.THRESH_BINARY + cv2.THRESH_OTSU) # Otsu binarization
+
+    # Set 2
+    gaussian_blur = cv2.GaussianBlur(input_img2_original_grayscale, gaussian_kernel_size, 0) # Gaussian blur to reduce noise
+    histogram_gaussian = cv2.calcHist([gaussian_blur], [0], None, [256], [0,256])
+    ret1, otsu_thresh_gaussian = cv2.threshold(gaussian_blur, otsu_thresh_lower_bound, otsu_thresh_upper_bound, cv2.THRESH_BINARY + cv2.THRESH_OTSU) # Otsu binarization
     
+
+    # Plot images and histograms
+    plot.figure(4)
+
+    # Set 1
+    plot.subplot(231)
+    plot.imshow(input_img2_original_grayscale, cmap='gray')
+    plot.title('Original Grayscale')
+    plot.axis('off')
+
+    plot.subplot(232)
+    plot.plot(histogram_original, color='k')
+    plot.title('Histogram Original')
+    plot.xlim([0,256])
+
+    plot.subplot(233)
+    plot.imshow(otsu_thresh_original, cmap='gray')
+    plot.title('Otsu threshold')
+    plot.axis('off')
+
+    # Set 2
+    plot.subplot(234)
+    plot.imshow(gaussian_blur, cmap='gray')
+    plot.title('Gaussian Blurred original')
+    plot.axis('off')
+
+    plot.subplot(235)
+    plot.plot(histogram_gaussian, color='k')
+    plot.title('Histogram Gaussian Blurred')
+    plot.xlim([0,256])
+
+    plot.subplot(236)
+    plot.imshow(otsu_thresh_gaussian, cmap='gray')
+    plot.title('Otsu threshold')
+    plot.axis('off')
+
+    plot.tight_layout()
     
-    
-    return otsu_thresh
+    return otsu_thresh_gaussian, otsu_thresh_original
 
 
 # Call plot functions
@@ -131,12 +174,13 @@ plot.show() # Show all plots
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
+
 # Second set of images
 img_plot(img_original_casings_noise, img_grayscale_casings_noise)
 img2_grayscale_hist, img2_equalized_hist = compare_histograms(img_grayscale_casings_noise, img_original_casings_noise) # Save returned values
-  # Do otsu binerization contour detection
+otsu_binarization(img2_equalized_hist, img2_grayscale_hist) # Do otsu binerization before contour detection
 contours2_grayscale = contour_detect(img2_grayscale_hist, img2_equalized_hist)
 
-plot.show() # Show all plots
+plot.show()
 cv2.waitKey(0)
 cv2.destroyAllWindows()
