@@ -8,6 +8,9 @@ img_grayscale_casings_black = cv2.imread("images/hylstre_maatte.jpg", 0) #Conver
 img_original_casings_noise = cv2.imread("images/hylstre_stoej.jpg")
 img_grayscale_casings_noise = cv2.imread("images/hylstre_stoej.jpg", 0) #Convert to grayscale
 
+img_original_bane = cv2.imread("images/bane.jpg")
+img_grayscale_bane = cv2.imread("images/bane.jpg", 0) #Convert to grayscale
+
 def img_plot(input_img_original, input_img_grayscale):
     plot.figure(1) # Create and activate figure 1
 
@@ -61,14 +64,15 @@ def compare_histograms(input_img_grayscale, input_img_original):
 # Contour detect 
 def contour_detect(img, img2):
     thresh_lower_bound = 180
-    thresh_upper_bound = 255
+    thresh_upper_bound = 256
     thresh_type = [cv2.THRESH_BINARY, cv2.THRESH_BINARY_INV, cv2.THRESH_TRUNC, cv2.THRESH_TOZERO, cv2.THRESH_TOZERO_INV]
-
+    selected_thresh_type = 1
+    
     contour_line_thickness = 2
     contour_parrent_idx = -1 # -1 to draw all contours
     contour_line_color = (0, 255, 0) # BGR
-    contour_min_area = 800  # Minimum area in pixels to consider as contour
-    contour_max_area = 20000
+    contour_min_area = 5  # Minimum area in pixels to consider as contour
+    contour_max_area = 2000
 
     plot_font_size = 9
     plot_text_color = 'red'
@@ -76,12 +80,20 @@ def contour_detect(img, img2):
     plot_text_position_y = 0.95
 
     # First img
-    ret, thresh = cv2.threshold(img, thresh_lower_bound, thresh_upper_bound, thresh_type[0]) # Apply threshold (min, max intensity)
+    ret, thresh = cv2.threshold(img, thresh_lower_bound, thresh_upper_bound, thresh_type[selected_thresh_type]) # Apply threshold (min, max intensity)
+    histogram = cv2.calcHist([thresh], [0], None, [256], [0,256]) # Create histogram of grayscale img
+
     plot.figure(6)
-    plot.subplot(121)
-    plot.imshow(thresh)
+    plot.subplot(221)
+    plot.imshow(thresh, cmap='gray')
     plot.title('Thresholded Image fig6')
     plot.axis('off')
+
+    plot.subplot(222)
+    plot.plot(histogram, color='k')
+    plot.title('Histogram Thresholded Image fig6')
+    plot.xlim([0,256])
+
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # Find contours
     contour_filtered = [c for c in contours if cv2.contourArea(c) >= contour_min_area]  # Filter contours by area (min, max area)
     contour_filtered2 = [c for c in contour_filtered if cv2.contourArea(c) <= contour_max_area] 
@@ -90,13 +102,13 @@ def contour_detect(img, img2):
     img_contours = img.copy()
     cv2.drawContours(img_contours, contour_filtered2, contour_parrent_idx, contour_line_color, contour_line_thickness) # Draw all contours
     plot.figure(6)
-    plot.subplot(122)
-    plot.imshow(img_contours)
+    plot.subplot(223)
+    plot.imshow(img_contours, cmap='gray')
     plot.title('Thresholded contour filtered Image')
     plot.axis('off')
     
     # Second img
-    ret2, thresh2 = cv2.threshold(img2, thresh_lower_bound, thresh_upper_bound, thresh_type[0]) # Apply threshold
+    ret2, thresh2 = cv2.threshold(img2, thresh_lower_bound, thresh_upper_bound, thresh_type[selected_thresh_type]) # Apply threshold
     plot.figure(8)
     plot.subplot(121)
     plot.imshow(thresh2)
@@ -118,13 +130,13 @@ def contour_detect(img, img2):
     # Plot contours
     plot.figure(3) # Create and activate figure 3
 
-    plot.subplot(211)
+    plot.subplot(121)
     plot.imshow(img_contours, cmap='gray')
-    plot.text(plot_text_position_x, plot_text_position_y, f"count: {len(contour_filtered2)}", transform=plot.gca().transAxes, fontsize=plot_font_size, color=plot_text_color) # Add contour count text
+    plot.text(plot_text_position_x, plot_text_position_y, f"count: {len(contours)}", transform=plot.gca().transAxes, fontsize=plot_font_size, color=plot_text_color) # Add contour count text
     plot.title('Contours')
     plot.axis('off')
 
-    plot.subplot(212)
+    plot.subplot(122)
     plot.imshow(img2_contours, cmap='gray')
     plot.text(plot_text_position_x, plot_text_position_y, f"count: {len(contour2_filtered2)}", transform=plot.gca().transAxes, fontsize=plot_font_size, color=plot_text_color) # Add contour count text
     plot.title('Contours Equalized')
@@ -193,6 +205,56 @@ def otsu_binarization(input_img_equalized_grayscale, input_img2_original_graysca
     return otsu_thresh_gaussian, otsu_thresh_original
 
 
+
+def blob_circle_detect(input_img):
+
+    # 1. Convert to grayscale
+    gray = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
+
+    # 2. Blur
+    blurred = cv2.GaussianBlur(gray, (7, 7), 2)
+
+    # 3. Canny edges
+    edges = cv2.Canny(blurred, 80, 160)
+
+    # 4. Setup blob detector parameters
+    params = cv2.SimpleBlobDetector_Params()
+
+    params.filterByArea = True
+    params.minArea = 20
+    params.maxArea = 20000000
+    params.filterByCircularity = True
+    params.minCircularity = 0.6
+    params.filterByConvexity = False
+    params.filterByInertia = False
+
+    detector = cv2.SimpleBlobDetector_create(params)
+
+    keypoints = detector.detect(edges)
+
+    # 7. Draw blobs
+    output = cv2.drawKeypoints(input_img, keypoints, np.array([]), (0, 255, 0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    # 8. Plot
+    plot.figure(figsize=(10,5))
+
+    plot.subplot(1,2,1)
+    plot.imshow(edges, cmap='gray')
+    plot.title("Canny edges")
+    plot.axis("off")
+
+    plot.subplot(1,2,2)
+    plot.imshow(output)
+    plot.title("Blob detected circles")
+    plot.axis("off")
+
+    plot.tight_layout()
+    plot.show()
+
+    return keypoints, output
+
+
+
 # # Call plot functions
 # # First set of images
 # img_plot(img_original_casings_black, img_grayscale_casings_black) 
@@ -206,15 +268,24 @@ def otsu_binarization(input_img_equalized_grayscale, input_img2_original_graysca
 
 # Second set of images
 #img_plot(img_original_casings_noise, img_grayscale_casings_noise)
-img2_grayscale_hist, img2_equalized_hist = compare_histograms(img_grayscale_casings_noise, img_original_casings_noise) # Save returned values
-otsu_binarization_img_gaussian, otsu_binarization_img_original = otsu_binarization(img2_equalized_hist, img2_grayscale_hist) # Do otsu binerization before contour detection
+#img2_grayscale_hist, img2_equalized_hist = compare_histograms(img_grayscale_casings_noise, img_original_casings_noise) # Save returned values
+#otsu_binarization_img_gaussian, otsu_binarization_img_original = otsu_binarization(img2_equalized_hist, img2_grayscale_hist) # Do otsu binerization before contour detection
 #contour_detect(img2_grayscale_hist, img2_equalized_hist)
 #contour_detect(otsu_binarization_img_original, otsu_binarization_img_gaussian)
 
-opening_original = cv2.morphologyEx(otsu_binarization_img_original, cv2.MORPH_OPEN, np.ones((32,32), np.uint8))
-opening_equalized = cv2.morphologyEx(otsu_binarization_img_gaussian, cv2.MORPH_OPEN, np.ones((32,32), np.uint8))
-img_plot(opening_original, opening_equalized)
-contour_detect(opening_original, opening_equalized)
+#opening_original = cv2.morphologyEx(otsu_binarization_img_original, cv2.MORPH_OPEN, np.ones((32,32), np.uint8))
+#opening_equalized = cv2.morphologyEx(otsu_binarization_img_gaussian, cv2.MORPH_OPEN, np.ones((32,32), np.uint8))
+#img_plot(opening_original, opening_equalized)
+#contour_detect(opening_original, opening_equalized)
+
+#plot.show()
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+
+# Third set of images
+#blob_circle_detect(img_original_bane)
+img3_bane_grayscale_hist, img3_bane_equalized_hist = compare_histograms(img_grayscale_bane, img_original_bane)
+contour_detect(img3_bane_grayscale_hist, img3_bane_equalized_hist)
 
 plot.show()
 cv2.waitKey(0)
